@@ -17,6 +17,7 @@ public class Agent extends QuoridorPlayer {
     private final QuoridorPlayer[] players = new QuoridorPlayer[2];
     private final ArrayList<PlaceObject> endPositions = new ArrayList<>();
     private final ArrayList<PlaceObject> endPositionsEnemy = new ArrayList<>();
+    private ArrayList<PlaceObject> shortestPath;
 
     private int numWalls;
 
@@ -39,15 +40,23 @@ public class Agent extends QuoridorPlayer {
         }
     }
 
+    /**
+     * Ha az ellenfél hamarabb érne célbe oda akkor próbáljuk meg ezt egy fal lerakásával befolyásolni,
+     * hogy mi érjünk célba hamarabb
+     * Ha már nem sikerül fal lerakásával se kevesebb lépésszer eljutni, akkor csak menjünk a legrövidebb útvonalon
+     * @param prevAction
+     * @param remainingTimes
+     * @return
+     */
     @Override
     public QuoridorAction getAction(QuoridorAction prevAction, long[] remainingTimes) {
         saveEnemyAction(prevAction);
 
-        int myShortestPathLength = getShortestPath(new PlaceObject(i, j), endPositions).size();
+        shortestPath = getShortestPath(new PlaceObject(i, j), endPositions);
         int enemyShortestPathLength = getShortestPath(new PlaceObject(players[1-color].i, players[1-color].j), endPositionsEnemy).size();
 
-        if (myShortestPathLength > enemyShortestPathLength && numWalls < QuoridorGame.MAX_WALLS) {
-            WallObject wall = getWallStep(myShortestPathLength - enemyShortestPathLength);
+        if (shortestPath.size() > enemyShortestPathLength && numWalls < QuoridorGame.MAX_WALLS) {
+            WallObject wall = getWallStep(shortestPath.size() - enemyShortestPathLength);
             if (wall != null) {
                 numWalls++;
                 walls.add(wall);
@@ -60,12 +69,13 @@ public class Agent extends QuoridorPlayer {
         }
     }
 
-    private MoveAction getMyNextStep() {
-        ArrayList<PlaceObject> myShortestPath = getShortestPath(new PlaceObject(i, j), endPositions);
-        PlaceObject nextStep = myShortestPath.get(1);
-        return new MoveAction(i, j, nextStep.i, nextStep.j);
-    }
-
+    /**
+     * Fal lépés kiszámolása:
+     * Keressük azt a fal lerakási lépést ahová leraknánk ott az ellenfél legtávolabb lenne a végponttol
+     * mi pedig a leközelebb
+     * @param diff különbség amely megadja a két játékos közötti játékkos célba jutási távolságot
+     * @return fal lerakás pozicója, null ha nem tudjuk megfordítani az "állást"
+     */
     private WallObject getWallStep(int diff) {
         int pathDiff = diff;
         WallObject candidateWall = null;
@@ -78,13 +88,12 @@ public class Agent extends QuoridorPlayer {
                     boolean canPut = QuoridorGame.checkWall(wall, walls, players);
                     if (canPut) {
                         walls.add(wall);
-                        int myShortestPath = getShortestPath(new PlaceObject(i, j), endPositions).size();
                         int enemyShortestPath = getShortestPath(new PlaceObject(players[1-color].i, players[1-color].j), endPositionsEnemy).size();
                         walls.remove(wall);
 
-                        if (myShortestPath - enemyShortestPath < pathDiff) {
+                        if (shortestPath.size() - enemyShortestPath < pathDiff) {
                             candidateWall = wall;
-                            pathDiff = myShortestPath - enemyShortestPath;
+                            pathDiff = shortestPath.size() - enemyShortestPath;
                         }
                     }
                 }
@@ -95,13 +104,21 @@ public class Agent extends QuoridorPlayer {
     }
 
     /**
+     * @return a következő lépéssel a legrövidebb útvonal szerint
+     */
+    private MoveAction getMyNextStep() {
+        PlaceObject nextStep = shortestPath.get(1);
+        return new MoveAction(i, j, nextStep.i, nextStep.j);
+    }
+
+    /**
      * Megadja a lehetséges célpontok közül azt, amelyet a legkevesebb lépésegben érjük el (min keresés)
      * Szükséges, mert a falak befolyásolják a célpontokhoz való útvonal hosszát
      * @return Lista amelyben megtalálható az útvonal koordinátái
      */
     private ArrayList<PlaceObject> getShortestPath(PlaceObject start, ArrayList<PlaceObject> endPositions) {
         ArrayList<PlaceObject> shortestPath = new ArrayList<>();
-        int shortestPathLength = 100000000;
+        int shortestPathLength = Integer.MAX_VALUE;
         for (PlaceObject endPosition : endPositions) {
             ArrayList<PlaceObject> path = astar(start, endPosition);
             if (path.size() != 0 && path.size() < shortestPathLength) {
@@ -205,12 +222,6 @@ public class Agent extends QuoridorPlayer {
         neighbour.f = neighbour.g + neighbour.h;
     }
 
-    /**
-     * Manhattan távolság
-     * @param end_node
-     * @param neighbour
-     * @return
-     */
 //    private double manhattanDistance(Node end_node, Node neighbour) {
 //        return Math.abs(neighbour.position.i - end_node.position.i) + Math.abs(neighbour.position.j - end_node.position.j);
 //    }
