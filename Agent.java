@@ -43,39 +43,49 @@ public class Agent extends QuoridorPlayer {
     public QuoridorAction getAction(QuoridorAction prevAction, long[] remainingTimes) {
         saveEnemyAction(prevAction);
 
-        if (numWalls < QuoridorGame.MAX_WALLS) {
-            WallObject wall = getWallStep();
-            if (wall != null){
+        int myShortestPathLength = getShortestPath(new PlaceObject(i, j), endPositions).size();
+        int enemyShortestPathLength = getShortestPath(new PlaceObject(players[1-color].i, players[1-color].j), endPositionsEnemy).size();
+
+        if (myShortestPathLength > enemyShortestPathLength && numWalls < QuoridorGame.MAX_WALLS) {
+            WallObject wall = getWallStep(myShortestPathLength - enemyShortestPathLength);
+            if (wall != null) {
                 numWalls++;
                 walls.add(wall);
                 return wall.toWallAction();
+            } else {
+                return getMyNextStep();
             }
+        } else {
+            return getMyNextStep();
         }
+    }
 
+    private MoveAction getMyNextStep() {
         ArrayList<PlaceObject> myShortestPath = getShortestPath(new PlaceObject(i, j), endPositions);
         PlaceObject nextStep = myShortestPath.get(1);
-
         return new MoveAction(i, j, nextStep.i, nextStep.j);
     }
 
-    private WallObject getWallStep() {
-        int min = 10000;
+    private WallObject getWallStep(int diff) {
+        int pathDiff = diff;
         WallObject candidateWall = null;
 
         for (int k = 0; k < QuoridorGame.HEIGHT - 1; k++) {
             for (int l = 0; l < QuoridorGame.HEIGHT - 1; l++) {
-                WallObject wall = new WallObject(k, l, true);
+                for (int m = 0; m <= 1; m++) {
+                    WallObject wall = new WallObject(k, l, m == 0);
 
-                boolean canPut = QuoridorGame.checkWall(wall, walls, players);
-                if (canPut) {
-                    walls.add(wall);
-                    int myShortestPath = getShortestPath(new PlaceObject(i, j), endPositions).size();
-                    int enemyShortestPath = getShortestPath(new PlaceObject(players[1-color].i, players[1-color].j), endPositionsEnemy).size();
-                    walls.remove(wall);
+                    boolean canPut = QuoridorGame.checkWall(wall, walls, players);
+                    if (canPut) {
+                        walls.add(wall);
+                        int myShortestPath = getShortestPath(new PlaceObject(i, j), endPositions).size();
+                        int enemyShortestPath = getShortestPath(new PlaceObject(players[1-color].i, players[1-color].j), endPositionsEnemy).size();
+                        walls.remove(wall);
 
-                    if (myShortestPath - enemyShortestPath < min) {
-                        min = myShortestPath - enemyShortestPath;
-                        candidateWall = wall;
+                        if (myShortestPath - enemyShortestPath < pathDiff) {
+                            candidateWall = wall;
+                            pathDiff = myShortestPath - enemyShortestPath;
+                        }
                     }
                 }
             }
@@ -83,7 +93,6 @@ public class Agent extends QuoridorPlayer {
 
         return candidateWall;
     }
-
 
     /**
      * Megadja a lehetséges célpontok közül azt, amelyet a legkevesebb lépésegben érjük el (min keresés)
@@ -192,7 +201,7 @@ public class Agent extends QuoridorPlayer {
      */
     private void setFCost(Node end_node, Node current, Node neighbour) {
         neighbour.g = current.g + 1;
-        neighbour.h = manhattanDistance(end_node, neighbour);
+        neighbour.h = euclideanDistance(end_node, neighbour);
         neighbour.f = neighbour.g + neighbour.h;
     }
 
@@ -202,13 +211,13 @@ public class Agent extends QuoridorPlayer {
      * @param neighbour
      * @return
      */
-    private double manhattanDistance(Node end_node, Node neighbour) {
-        return Math.abs(neighbour.position.i - end_node.position.i) + Math.abs(neighbour.position.j - end_node.position.j);
-    }
-
-//    private double euclideanDistance(Node end_node, Node neighbour) {
-//        return Math.pow(neighbour.position.i - end_node.position.i, 2) + Math.pow(neighbour.position.j - end_node.position.j, 2);
+//    private double manhattanDistance(Node end_node, Node neighbour) {
+//        return Math.abs(neighbour.position.i - end_node.position.i) + Math.abs(neighbour.position.j - end_node.position.j);
 //    }
+
+    private double euclideanDistance(Node end_node, Node neighbour) {
+        return Math.pow(neighbour.position.i - end_node.position.i, 2) + Math.pow(neighbour.position.j - end_node.position.j, 2);
+    }
 
 
     /**
