@@ -56,7 +56,7 @@ public class Agent extends QuoridorPlayer {
         int enemyShortestPathLength = getShortestPath(new PlaceObject(players[1-color].i, players[1-color].j), endPositionsEnemy).size();
 
         if (shortestPath.size() > enemyShortestPathLength && numWalls < QuoridorGame.MAX_WALLS) {
-            WallObject wall = getWallStep(shortestPath.size() - enemyShortestPathLength);
+            WallObject wall = getWallStep(shortestPath.size() - enemyShortestPathLength, enemyShortestPathLength);
             if (wall != null) {
                 numWalls++;
                 walls.add(wall);
@@ -76,7 +76,8 @@ public class Agent extends QuoridorPlayer {
      * @param diff különbség amely megadja a két játékos közötti játékkos célba jutási távolságot
      * @return fal lerakás pozicója, null ha nem tudjuk megfordítani az "állást"
      */
-    private WallObject getWallStep(int diff) {
+    private WallObject getWallStep(int diff, int enemyShortestPathLength) {
+        int max = enemyShortestPathLength;
         int pathDiff = diff;
         WallObject candidateWall = null;
 
@@ -92,8 +93,11 @@ public class Agent extends QuoridorPlayer {
                         walls.remove(wall);
 
                         if (shortestPath.size() - enemyShortestPath < pathDiff) {
-                            candidateWall = wall;
-                            pathDiff = shortestPath.size() - enemyShortestPath;
+                            if (enemyShortestPath > max) {
+                                candidateWall = wall;
+                                pathDiff = shortestPath.size() - enemyShortestPath;
+                                max = enemyShortestPath;
+                            }
                         }
                     }
                 }
@@ -218,13 +222,13 @@ public class Agent extends QuoridorPlayer {
      */
     private void setFCost(Node end_node, Node current, Node neighbour) {
         neighbour.g = current.g + 1;
-        neighbour.h = euclideanDistance(end_node, neighbour);
+        neighbour.h = manhattanDistance(end_node, neighbour);
         neighbour.f = neighbour.g + neighbour.h;
     }
 
-//    private double manhattanDistance(Node end_node, Node neighbour) {
-//        return Math.abs(neighbour.position.i - end_node.position.i) + Math.abs(neighbour.position.j - end_node.position.j);
-//    }
+    private double manhattanDistance(Node end_node, Node neighbour) {
+        return Math.abs(neighbour.position.i - end_node.position.i) + Math.abs(neighbour.position.j - end_node.position.j);
+    }
 
     private double euclideanDistance(Node end_node, Node neighbour) {
         return Math.pow(neighbour.position.i - end_node.position.i, 2) + Math.pow(neighbour.position.j - end_node.position.j, 2);
