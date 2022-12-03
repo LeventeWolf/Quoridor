@@ -18,6 +18,7 @@ public class Agent extends QuoridorPlayer {
     private final ArrayList<PlaceObject> endPositions = new ArrayList<>();
     private final ArrayList<PlaceObject> endPositionsEnemy = new ArrayList<>();
     private ArrayList<PlaceObject> shortestPath;
+    private int round = 0;
 
     private int numWalls;
 
@@ -55,7 +56,7 @@ public class Agent extends QuoridorPlayer {
         shortestPath = getShortestPath(new PlaceObject(i, j), endPositions);
         int enemyShortestPathLength = getShortestPath(new PlaceObject(players[1-color].i, players[1-color].j), endPositionsEnemy).size();
 
-        if (shortestPath.size() > enemyShortestPathLength && numWalls < QuoridorGame.MAX_WALLS) {
+        if (shortestPath.size() > enemyShortestPathLength && numWalls < QuoridorGame.MAX_WALLS && round > 10) {
             WallObject wall = getWallStep(shortestPath.size() - enemyShortestPathLength, enemyShortestPathLength);
             if (wall != null) {
                 numWalls++;
@@ -111,6 +112,7 @@ public class Agent extends QuoridorPlayer {
      * @return a következő lépéssel a legrövidebb útvonal szerint
      */
     private MoveAction getMyNextStep() {
+        round++;
         PlaceObject nextStep = shortestPath.get(1);
         return new MoveAction(i, j, nextStep.i, nextStep.j);
     }
