@@ -16,6 +16,8 @@ public class Agent extends QuoridorPlayer {
     private final List<WallObject> walls = new LinkedList<>();
     private final QuoridorPlayer[] players = new QuoridorPlayer[2];
     private final ArrayList<PlaceObject> endPositions = new ArrayList<>();
+    private final ArrayList<PlaceObject> endPositionsEnemy = new ArrayList<>();
+
     private int numWalls;
 
     public Agent(int i, int j, int color, Random random) {
@@ -31,41 +33,68 @@ public class Agent extends QuoridorPlayer {
         for (int k = 0; k < QuoridorGame.HEIGHT - 1; k++) {
             endPositions.add(new PlaceObject(color == 1 ? 0 : QuoridorGame.HEIGHT - 1, k));
         }
+
+        for (int k = 0; k < QuoridorGame.HEIGHT - 1; k++) {
+            endPositionsEnemy.add(new PlaceObject(color != 1 ? 0 : QuoridorGame.HEIGHT - 1, k));
+        }
     }
 
     @Override
     public QuoridorAction getAction(QuoridorAction prevAction, long[] remainingTimes) {
         saveEnemyAction(prevAction);
 
-        int di = (color * (QuoridorGame.HEIGHT - 1)) - players[1-color].i < 0 ? -1 : 0;
-        List<WallObject> wallObjects = new LinkedList<>();
-        wallObjects.add(new WallObject(players[1-color].i + di, players[1-color].j - color, true));
-        wallObjects.add(new WallObject(players[1-color].i + di, players[1-color].j - 1 + color, true));
-        wallObjects.add(new WallObject(players[1-color].i + di, players[1-color].j - color, false));
-        wallObjects.add(new WallObject(players[1-color].i + di, players[1-color].j - 1 + color, false));
-        for (WallObject wall : wallObjects) {
-            if (numWalls < QuoridorGame.MAX_WALLS && QuoridorGame.checkWall(wall, walls, players)) {
-                numWalls ++;
+        if (numWalls < QuoridorGame.MAX_WALLS) {
+            WallObject wall = getWallStep();
+            if (wall != null){
+                numWalls++;
                 walls.add(wall);
                 return wall.toWallAction();
             }
         }
 
-        ArrayList<PlaceObject> shortestPath = getShortestPath();
-        PlaceObject nextStep = shortestPath.get(1);
+        ArrayList<PlaceObject> myShortestPath = getShortestPath(new PlaceObject(i, j), endPositions);
+        PlaceObject nextStep = myShortestPath.get(1);
+
         return new MoveAction(i, j, nextStep.i, nextStep.j);
     }
+
+    private WallObject getWallStep() {
+        int min = 10000;
+        WallObject candidateWall = null;
+
+        for (int k = 0; k < QuoridorGame.HEIGHT - 1; k++) {
+            for (int l = 0; l < QuoridorGame.HEIGHT - 1; l++) {
+                WallObject wall = new WallObject(k, l, true);
+
+                boolean canPut = QuoridorGame.checkWall(wall, walls, players);
+                if (canPut) {
+                    walls.add(wall);
+                    int myShortestPath = getShortestPath(new PlaceObject(i, j), endPositions).size();
+                    int enemyShortestPath = getShortestPath(new PlaceObject(players[1-color].i, players[1-color].j), endPositionsEnemy).size();
+                    walls.remove(wall);
+
+                    if (myShortestPath - enemyShortestPath < min) {
+                        min = myShortestPath - enemyShortestPath;
+                        candidateWall = wall;
+                    }
+                }
+            }
+        }
+
+        return candidateWall;
+    }
+
 
     /**
      * Megadja a lehetséges célpontok közül azt, amelyet a legkevesebb lépésegben érjük el (min keresés)
      * Szükséges, mert a falak befolyásolják a célpontokhoz való útvonal hosszát
      * @return Lista amelyben megtalálható az útvonal koordinátái
      */
-    private ArrayList<PlaceObject> getShortestPath() {
+    private ArrayList<PlaceObject> getShortestPath(PlaceObject start, ArrayList<PlaceObject> endPositions) {
         ArrayList<PlaceObject> shortestPath = new ArrayList<>();
-        int shortestPathLength = 100000;
+        int shortestPathLength = 100000000;
         for (PlaceObject endPosition : endPositions) {
-            ArrayList<PlaceObject> path = astar(new PlaceObject(this.i, this.j), endPosition);
+            ArrayList<PlaceObject> path = astar(start, endPosition);
             if (path.size() != 0 && path.size() < shortestPathLength) {
                 shortestPathLength = path.size();
                 shortestPath = path;
@@ -177,7 +206,7 @@ public class Agent extends QuoridorPlayer {
         return Math.abs(neighbour.position.i - end_node.position.i) + Math.abs(neighbour.position.j - end_node.position.j);
     }
 
-//    private double eukledianDistance(Node end_node, Node neighbour) {
+//    private double euclideanDistance(Node end_node, Node neighbour) {
 //        return Math.pow(neighbour.position.i - end_node.position.i, 2) + Math.pow(neighbour.position.j - end_node.position.j, 2);
 //    }
 
