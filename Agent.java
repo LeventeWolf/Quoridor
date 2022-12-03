@@ -167,6 +167,12 @@ public class Agent extends QuoridorPlayer {
         neighbour.f = neighbour.g + neighbour.h;
     }
 
+    /**
+     * Manhattan távolság
+     * @param end_node
+     * @param neighbour
+     * @return
+     */
     private double manhattanDistance(Node end_node, Node neighbour) {
         return Math.abs(neighbour.position.i - end_node.position.i) + Math.abs(neighbour.position.j - end_node.position.j);
     }
