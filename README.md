@@ -3,6 +3,10 @@ Quoridor two player game
 
 ## Insights
 
+<p align="center">
+  <img src="documentation/agent-vs-agent.gif" alt="animated" />
+</p>
+
 ## Setup and install
 
 The JavaFX and Game_Engine is located in the /libraries folder.
