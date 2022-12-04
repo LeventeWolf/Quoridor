@@ -1,13 +1,16 @@
 # Quoridor
-Quoridor two player game
+
+Be the first to reach the other side of the board by moving 
+your pawn across the grid or placing a fence to block your opponent's movement.
+<br>
+More info: https://boardgamegeek.com/boardgame/624/quoridor
 
 ## Insights
-
 <p align="center">
   <img src="documentation/agent-vs-agent.gif" alt="animated" />
 </p>
 
-## Setup and install
+### Setup and install
 
 The JavaFX and Game_Engine is located in the /libraries folder.
 
@@ -30,7 +33,7 @@ You successfully set up the project. <br>
 Now you can configure the game parameters in Main.java.
 
 
-## Players
+### Players
 
 Built in players: (located in game_engine/game/quoridor/players)
 - HumanPlayer
