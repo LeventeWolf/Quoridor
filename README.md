@@ -22,7 +22,7 @@ The JavaFX and Game_Engine is located in the /libraries folder.
    - Add your javaFX-sdk lib path to new VM options with the --module-path flag
    ![](documentation/edit-configurations.png) <br>
 
-You successuly setup the project. <br>
+You successfully set up the project. <br>
 Now you can configure the game parameters in Main.java.
 
 
