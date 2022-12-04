@@ -11,16 +11,47 @@ import game.quoridor.utils.WallObject;
 
 import java.util.*;
 
+/**
+ * Ágens osztály ami a játékos lehetséges akcióit kezeli le <br>
+ * Egy akció lehet fal lerakás vagy mozgási lépés
+ * */
 public class Agent extends QuoridorPlayer {
 
+    /**
+     * Lerakott falak poziciójai
+     */
     private final List<WallObject> walls = new LinkedList<>();
+    /**
+     * Tömb amibne a játékosok szerepelenk
+     */
     private final QuoridorPlayer[] players = new QuoridorPlayer[2];
+    /**
+     * Célpontok a játék megnyeréséhez
+     */
     private final ArrayList<PlaceObject> endPositions = new ArrayList<>();
+    /**
+     * Ellenfél célpontjai a játék megnyeréséhez
+     */
     private final ArrayList<PlaceObject> endPositionsEnemy = new ArrayList<>();
+    /**
+     * Legrövidebb útvonal a játék megnyeréséhez
+     */
     private ArrayList<PlaceObject> shortestPath;
-
+    /**
+     * Az általunk lerakott falak száma
+     */
     private int numWalls;
 
+    /**
+     * Konstruktor amely a következőket inicializálja: <br>
+     * - Játékos <br>
+     * - Ellenfél játékos <br>
+     * - Lerakott falak száma <br>
+     * @param i a játékos kezdő oszlopának koordinátája
+     * @param j a játékos kezdő sorának koordinátája
+     * @param color A játékos színe ami lehet 0 vagy 1 (0: fekete, 1: fehér)
+     * @param random Véletlen szám generálásra szolgál
+     */
     public Agent(int i, int j, int color, Random random) {
         super(i, j, color, random);
         players[color] = this;
@@ -30,6 +61,11 @@ public class Agent extends QuoridorPlayer {
         initEndPositions(color);
     }
 
+    /**
+     * Célpontok inicializálása mind a két játékos számára, attól függően, hogy épp hol kezdenek.
+     * Szükséges az akciók végrehajtásának kiszámításához.
+     * @param color játékos színe, lehet 0 vagy 1
+     */
     private void initEndPositions(int color) {
         for (int k = 0; k < QuoridorGame.HEIGHT - 1; k++) {
             endPositions.add(new PlaceObject(color == 1 ? 0 : QuoridorGame.HEIGHT - 1, k));
@@ -42,7 +78,7 @@ public class Agent extends QuoridorPlayer {
 
     /**
      * Ha az ellenfél hamarabb érne célbe oda akkor próbáljuk meg ezt egy fal lerakásával befolyásolni,
-     * hogy mi érjünk célba hamarabb
+     * hogy mi érjünk a célba hamarabb
      * Ha már nem sikerül fal lerakásával se kevesebb lépésszer eljutni, akkor csak menjünk a legrövidebb útvonalon
      * @param prevAction
      * @param remainingTimes
@@ -71,8 +107,8 @@ public class Agent extends QuoridorPlayer {
 
     /**
      * Fal lépés kiszámolása:
-     * Keressük azt a fal lerakási lépést ahová leraknánk ott az ellenfél legtávolabb lenne a végponttol
-     * mi pedig a leközelebb
+     * Keressük azt a fal lerakási lépést ahová leraknánk ott az ellenfél legtávolabb lenne a végponttol,
+     * mi pedig a leközelebb a célpontunkhoz. <br>
      * @param diff különbség amely megadja a két játékos közötti játékkos célba jutási távolságot
      * @return fal lerakás pozicója, null ha nem tudjuk megfordítani az "állást"
      */
@@ -108,7 +144,7 @@ public class Agent extends QuoridorPlayer {
     }
 
     /**
-     * @return a következő lépéssel a legrövidebb útvonal szerint
+     * @return a legrövidebb útvonal szerinti következő lépés
      */
     private MoveAction getMyNextStep() {
         PlaceObject nextStep = shortestPath.get(1);
@@ -134,7 +170,13 @@ public class Agent extends QuoridorPlayer {
     }
 
     /**
-     * Node osztály ami egy csúcsot-t reprezentál az a* keresési algoritmusban
+     * Node osztály ami egy csúcsot-t reprezentál az a* keresési algoritmusban. <br>
+     * Attribútumai: <br>
+     * - Parent: a csúcs szülője <br>
+     * - Position: a csúcs pozíciója <br>
+     * - g: lépési költség a csúcshoz való eljutásig <br>
+     * - h: a csúcstól a célpontig történő mozgás becsült költsége (heurisztika) <br>
+     * - f: g és h összege <br>
      */
     static class Node {
         Node parent;
@@ -155,7 +197,7 @@ public class Agent extends QuoridorPlayer {
     }
 
     /**
-     * A* keresési algoritmus
+     * A* keresési algoritmus, ami visszadja a legrövidebb útvonalat a kezdő és a célpont között.
      * @param start Játékos pozíciója
      * @param end Célpont pozíciója
      * @return Lista amely tartalmazza a legrövidebb útvonalat a célponthoz
@@ -226,14 +268,25 @@ public class Agent extends QuoridorPlayer {
         neighbour.f = neighbour.g + neighbour.h;
     }
 
+    /**
+     * Kiszámolja a manhattan távolságot a megadott két csúcs között
+     * @param end_node Csúcs ahová el akarunk jutni
+     * @param neighbour Kiindulási csúcs ahonnan indulunk
+     * @return Manhattan távolság a csúcs pont között
+     */
     private double manhattanDistance(Node end_node, Node neighbour) {
         return Math.abs(neighbour.position.i - end_node.position.i) + Math.abs(neighbour.position.j - end_node.position.j);
     }
 
+    /**
+     * Kiszámolja az eukleidészi távolságot a megadott két csúcs között
+     * @param end_node Csúcs ahová el akarunk jutni
+     * @param neighbour Kiindulási csúcs ahonnan indulunk
+     * @return Eukleidészi távolság a csúcs pont között
+     */
     private double euclideanDistance(Node end_node, Node neighbour) {
         return Math.pow(neighbour.position.i - end_node.position.i, 2) + Math.pow(neighbour.position.j - end_node.position.j, 2);
     }
-
 
     /**
      * Megadja a jelenlegi csúcsból a további lehetséges lépéseket
