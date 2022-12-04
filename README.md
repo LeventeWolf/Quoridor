@@ -7,7 +7,7 @@ Quoridor two player game
 
 The JavaFX and Game_Engine is located in the /libraries folder.
 
-1. Add libraries/JavaFX or Download JavaFX SDK https://openjfx.io/openjfx-docs/
+1. Add libraries/JavaFX (unzip libraries/javafx-sdk1.2.zip)
 2. Add JavaFX SDK to Project libraries
    - -> File -> Project Structures -> Libraries
    - "+" Java
@@ -15,12 +15,12 @@ The JavaFX and Game_Engine is located in the /libraries folder.
    ![](documentation/add-javafx-sdk.png)
 
 3. Add libraries/game_engine.jar the same way (-> 2.)
-4. Create new Run configuration
-   - -> Edit configuratins
-   ![](documentation/edit-configurations.png)
-   - Select Main class
+4. Create new Run configuration <br>
+   - -> Edit configurations
+   ![](documentation/edit-configurations.png) <br>
+   - Select Main class <br>
    - Add your javaFX-sdk lib path to new VM options with the --module-path flag
-   ![](documentation/edit-configurations.png)
+   ![](documentation/edit-configurations.png) <br>
 
 You successuly setup the project. <br>
 Now you can configure the game parameters in Main.java.
