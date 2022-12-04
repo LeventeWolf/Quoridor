@@ -10,10 +10,10 @@ public class Main {
         String timeout = "5000";
         String blackPlayer = "Agent";
         String whitePlayer = "game.quoridor.players.BlockRandomPlayer";
-        String[] asBlack = {speed, "game.quoridor.QuoridorGame", seed, timeout, blackPlayer, whitePlayer};
+        String[] configuration = {speed, "game.quoridor.QuoridorGame", seed, timeout, blackPlayer, whitePlayer};
 
         try {
-            Engine.main(asBlack);
+            Engine.main(configuration);
         } catch (Exception e) {
             e.printStackTrace();
         }
